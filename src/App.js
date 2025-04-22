@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';  // QR 코드 라이브러리 import
+import { format } from 'date-fns';  // 날짜 포맷 라이브러리 import
 
 const App = () => {
   const [time, setTime] = useState(new Date());  // 시간 상태
   const [url, setUrl] = useState('');  // URL 상태
   const [qrCodeUrl, setQrCodeUrl] = useState('');  // QR 코드 URL 상태
-
+  const [timeColor, setTimeColor] = useState(localStorage.getItem('timeColor') || '#A8E6CF');  // 시간 색상 상태
+  const [dateColor, setDateColor] = useState(localStorage.getItem('dateColor') || '#33A1FF');  // 날짜 색상 상태
+  const [timeFormat, setTimeFormat] = useState(localStorage.getItem('timeFormat') || 'HH:mm:ss');  // 시간 포맷 상태
+  const [dateFormat, setDateFormat] = useState(localStorage.getItem('dateFormat') || 'yyyy-MM-dd eeee');  // 날짜 포맷 상태
+  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 100);  // 시간 x 좌표
+  const [y, setY] = useState(Number(localStorage.getItem('timeY')) || 100);  // 시간 y 좌표
+  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 100);  // 날짜 x 좌표
+  const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || 250);  // 날짜 y 좌표
+  const [isDragging, setIsDragging] = useState(false);  // 드래그 상태
+  const [startX, setStartX] = useState(0);  // 드래그 시작 x 좌표
+  const [startY, setStartY] = useState(0);  // 드래그 시작 y 좌표
+  const [timeSize, setTimeSize] = useState(Number(localStorage.getItem('timeSize')) || 100);  // 시간 크기 상태
+  const [dateSize, setDateSize] = useState(Number(localStorage.getItem('dateSize')) || 50);  // 날짜 크기 상태
+  const [shadowColor, setShadowColor] = useState(localStorage.getItem('shadowColor') || '#000000');
+  const [shadowSize, setShadowSize] = useState(Number(localStorage.getItem('shadowSize')) || 2);
+  
   // 시계를 매초마다 갱신
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -16,9 +32,16 @@ const App = () => {
   }, []);
 
   // 시간 포맷
-  const hours = time.getHours().toString().padStart(2, '0');
-  const minutes = time.getMinutes().toString().padStart(2, '0');
-  const seconds = time.getSeconds().toString().padStart(2, '0');
+  const formattedTime = format(time, timeFormat);
+
+  // 날짜 포맷 처리 (유효하지 않은 경우 기본 포맷으로 설정)
+  let formattedDate = '';
+  try {
+    formattedDate = dateFormat ? format(time, dateFormat) : format(time, 'yyyy-MM-dd eeee');
+  } catch (error) {
+    console.error('Invalid date format:', dateFormat);
+    formattedDate = format(time, 'yyyy-MM-dd eeee');  // 기본 포맷으로 설정
+  }
 
   // URL 입력 변경 처리
   const handleUrlChange = (e) => {
@@ -34,21 +57,277 @@ const App = () => {
     }
   };
 
+  // 시간 색상 변경 처리
+  const handleTimeColorChange = (e) => {
+    const selectedColor = e.target.value;
+    setTimeColor(selectedColor);
+    localStorage.setItem('timeColor', selectedColor);  // 색상 저장
+  };
+
+  // 날짜 색상 변경 처리
+  const handleDateColorChange = (e) => {
+    const selectedColor = e.target.value;
+    setDateColor(selectedColor);
+    localStorage.setItem('dateColor', selectedColor);  // 색상 저장
+  };
+
+  // 날짜 포맷 변경 처리
+  const handleDateFormatChange = (e) => {
+    let selectedFormat = e.target.value;
+
+    // 빈 문자열 처리
+    if (!selectedFormat.trim()) {
+      selectedFormat = 'yyyy-MM-dd eeee'; // 기본 날짜 포맷
+    }
+
+    setDateFormat(selectedFormat);
+    localStorage.setItem('dateFormat', selectedFormat);  // 날짜 포맷 저장
+  };
+
+  // 시간 포맷 변경 처리
+  const handleTimeFormatChange = (e) => {
+    let selectedFormat = e.target.value;
+
+    // 빈 문자열 처리
+    if (!selectedFormat.trim()) {
+      selectedFormat = 'HH:mm:ss'; // 기본 시간 포맷
+    }
+
+    setTimeFormat(selectedFormat);
+    localStorage.setItem('timeFormat', selectedFormat);  // 시간 포맷 저장
+  };
+
+  // 마우스 다운 이벤트 (드래그 시작)
+  const handleMouseDown = (e, type) => {
+    if (type === 'time') {
+      setStartX(e.clientX - x);  // 시간 x 위치 저장
+      setStartY(e.clientY - y);  // 시간 y 위치 저장
+    } else {
+      setStartX(e.clientX - dateX);  // 날짜 x 위치 저장
+      setStartY(e.clientY - dateY);  // 날짜 y 위치 저장
+    }
+    setIsDragging(true);  // 드래그 시작
+  };
+
+  // 마우스 이동 이벤트 (드래그 중)
+  const handleMouseMove = (e, type) => {
+    if (isDragging) {
+      if (type === 'time') {
+        // 시간의 경우
+        const newX = e.clientX - startX;
+        const newY = e.clientY - startY;
+
+        setX(newX);  // x 좌표 업데이트
+        setY(newY);  // y 좌표 업데이트
+        localStorage.setItem('timeX', newX);  // 새로운 위치 저장
+        localStorage.setItem('timeY', newY);
+      } else {
+        // 날짜의 경우
+        const newDateX = e.clientX - startX;
+        const newDateY = e.clientY - startY;
+
+        setDateX(newDateX);  // 날짜 x 좌표 업데이트
+        setDateY(newDateY);  // 날짜 y 좌표 업데이트
+        localStorage.setItem('dateX', newDateX);  // 새로운 위치 저장
+        localStorage.setItem('dateY', newDateY);
+      }
+    }
+  };
+
+  // 마우스 업 이벤트 (드래그 종료)
+  const handleMouseUp = () => {
+    setIsDragging(false);  // 드래그 종료
+  };
+
+  // 시간 크기 변경 처리 (슬라이더)
+  const handleTimeSizeChange = (e) => {
+    const newSize = Number(e.target.value);
+    setTimeSize(newSize);
+    localStorage.setItem('timeSize', newSize);  // 크기 저장
+  };
+
+  // 날짜 크기 변경 처리 (슬라이더)
+  const handleDateSizeChange = (e) => {
+    const newSize = Number(e.target.value);
+    setDateSize(newSize);
+    localStorage.setItem('dateSize', newSize);  // 크기 저장
+  };
+  const handleShadowColorChange = (e) => {
+    const color = e.target.value;
+    setShadowColor(color);
+    localStorage.setItem('shadowColor', color);
+  };
+  
+  const handleShadowSizeChange = (e) => {
+    const size = Number(e.target.value);
+    setShadowSize(size);
+    localStorage.setItem('shadowSize', size);
+  };
+  
+  const handleReset = () => {
+    setTimeColor('#A8E6CF'); // 기본 시간 색상 (예쁜 오렌지)
+    setDateColor('#33A1FF'); // 기본 날짜 색상 (예쁜 블루)
+    setTimeFormat('HH:mm:ss');
+    setDateFormat('yyyy-MM-dd eeee');
+    setTimeSize(100);
+    setDateSize(50);
+    setX(100);
+    setY(100);
+    setDateX(100);
+    setDateY(250);
+    setShadowSize(2);
+
+    // 로컬 스토리지 초기화
+    localStorage.clear();
+  };
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
-      <h1>Current Time</h1>
-      <h2>{`${hours}:${minutes}:${seconds}`}</h2>
+      <h1>Time and QR</h1>
 
-      {/* URL 입력 필드 */}
+      {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
+      <h3
+        style={{
+          color: dateColor,
+          fontSize: `${dateSize}px`,
+          position: 'absolute',
+          top: `${dateY}px`,
+          left: `${dateX}px`,
+          cursor: 'move',
+          userSelect: 'none',
+    textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+    padding: '5px'
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'date')}  // 날짜 드래그 시작
+        onMouseMove={(e) => handleMouseMove(e, 'date')}  // 날짜 드래그 중
+        onMouseUp={handleMouseUp}                      // 드래그 종료
+      >
+        {formattedDate}
+      </h3>
+
+      {/* 시간 표시 (색상, 크기, 위치, 포맷 적용) */}
+      <h2
+        style={{
+          color: timeColor,
+          fontSize: `${timeSize}px`,
+          position: 'absolute',
+          top: `${y}px`,
+          left: `${x}px`,
+          cursor: 'move',
+          userSelect: 'none',
+          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+          padding: '5px',
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'time')}  // 시간 드래그 시작
+        onMouseMove={(e) => handleMouseMove(e, 'time')}  // 시간 드래그 중
+        onMouseUp={handleMouseUp}                      // 드래그 종료
+      >
+        {formattedTime}
+      </h2>
+
+      {/* 시간 색상 선택 */}
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="color"
+          value={timeColor}
+          onChange={handleTimeColorChange}
+          style={{ padding: '10px', fontSize: '16px' }}
+        />
+        <span style={{ marginLeft: '10px', fontSize: '16px' }}>Select Time Color</span>
+      </div>
+
+      {/* 날짜 색상 선택 */}
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="color"
+          value={dateColor}
+          onChange={handleDateColorChange}
+          style={{ padding: '10px', fontSize: '16px' }}
+        />
+        <span style={{ marginLeft: '10px', fontSize: '16px' }}>Select Date Color</span>
+      </div>
+
+      {/* 날짜 포맷 입력 */}
       <div style={{ marginTop: '20px' }}>
         <input
           type="text"
-          placeholder="Enter URL"
+          value={dateFormat}
+          onChange={handleDateFormatChange}
+          placeholder="Enter Date Format (e.g., yyyy-MM-dd eeee)"
+          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
+        />
+      </div>
+
+      {/* 시간 포맷 입력 */}
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="text"
+          value={timeFormat}
+          onChange={handleTimeFormatChange}
+          placeholder="Enter Time Format (e.g., HH:mm:ss)"
+          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
+        />
+      </div>
+
+      {/* 시간 크기 조절 */}
+      <div style={{ marginTop: '20px' }}>
+        <label style={{ fontSize: '16px' }}>Time Size: </label>
+        <input
+          type="range"
+          min="10"
+          max="100"
+          value={timeSize}
+          onChange={handleTimeSizeChange}
+          style={{ marginLeft: '10px', width: '200px' }}
+        />
+      </div>
+
+      {/* 날짜 크기 조절 */}
+      <div style={{ marginTop: '20px' }}>
+        <label style={{ fontSize: '16px' }}>Date Size: </label>
+        <input
+          type="range"
+          min="10"
+          max="100"
+          value={dateSize}
+          onChange={handleDateSizeChange}
+          style={{ marginLeft: '10px', width: '200px' }}
+        />
+      </div>
+{/* 그림자 색상 */}
+<div style={{ marginTop: '20px' }}>
+  <input type="color" value={shadowColor} onChange={handleShadowColorChange} />
+  <span style={{ marginLeft: '10px' }}>Shadow Color</span>
+</div>
+
+{/* 그림자 크기 */}
+<div style={{ marginTop: '20px' }}>
+  <label>Shadow Size: </label>
+  <input type="range" min="0" max="20" value={shadowSize} onChange={handleShadowSizeChange} />
+  <span>{shadowSize}px</span>
+</div>
+
+  {/* 초기화 버튼 */}
+  <div style={{ marginTop: '20px' }}>
+        <button
+          onClick={handleReset}
+          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
+        >
+          Reset to Default
+        </button>
+      </div>
+      {/* URL 입력 */}
+      <div style={{ marginTop: '20px' }}>
+        <input
+          type="text"
           value={url}
           onChange={handleUrlChange}
-          style={{ padding: '10px', width: '300px', fontSize: '16px', marginBottom: '20px' }}
+          placeholder="Enter URL for QR code"
+          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
         />
-        {/* QR 코드 생성 버튼 */}
+      </div>
+
+      {/* QR 코드 생성 버튼 */}
+      <div style={{ marginTop: '20px' }}>
         <button
           onClick={handleGenerateQR}
           style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
@@ -57,7 +336,7 @@ const App = () => {
         </button>
       </div>
 
-      {/* QR 코드가 생성되었을 때 표시 */}
+      {/* QR 코드 표시 */}
       {qrCodeUrl && (
         <div style={{ marginTop: '20px' }}>
           <h3>Generated QR Code</h3>
