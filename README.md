@@ -93,3 +93,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - React for providing an excellent framework to build this app.
 - `react-qr-code` for generating QR codes.
 - `date-fns` for date formatting.
+
+## Android & iOS App
+You can download the Clock Web App directly on your mobile device!
+
+Download on Google Play (Android)
+https://play.google.com/store/apps/details?id=com.f91w
+Download on the App Store (iOS)
+https://apps.apple.com/us/app/digital-date-widget/id6744653621
+Moreover, the mobile apps offer a smooth experience with additional features, making it easy to keep track of time no matter where you are.
+
