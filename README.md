@@ -89,11 +89,7 @@ If you'd like to contribute to this project, feel free to fork the repository, m
 ## License:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. **[GitHub Sponsors](https://github.com/sponsors/oksoft1)** - You can sponsor this project directly through GitHub.
-
-
 ## Acknowledgments:
 - React for providing an excellent framework to build this app.
 - `react-qr-code` for generating QR codes.
 - `date-fns` for date formatting.
-
