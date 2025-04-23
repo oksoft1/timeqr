@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';  // QR 코드 라이브러리 import
 import { format } from 'date-fns';  // 날짜 포맷 라이브러리 import
+import * as locales from 'date-fns/locale'; // 모든 로케일을 한 번에 가져옵니다.
+
 const App = () => {
   const [time, setTime] = useState(new Date());  // 시간 상태
   const [url, setUrl] = useState('');  // URL 상태
@@ -20,6 +22,12 @@ const App = () => {
   const [dateSize, setDateSize] = useState(Number(localStorage.getItem('dateSize')) || 30);  // 날짜 크기 상태
   const [shadowColor, setShadowColor] = useState(localStorage.getItem('shadowColor') || '#000000');
   const [shadowSize, setShadowSize] = useState(Number(localStorage.getItem('shadowSize')) || 2);
+  // 배경색상 상태 추가
+  const [backgroundColor, setBackgroundColor] = useState(localStorage.getItem('backgroundColor') || '#FFFFFF');  // 기본 배경색은 흰색
+  const [textColor, setTextColor] = useState('#000000');  // 텍스트 기본색은 검정
+  const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
+  const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
+
   // 마우스 다운과 터치 시작 이벤트 공통 처리
 const handleStart = (e, type) => {
   const clientX = e.clientX || e.touches[0].clientX;  // 마우스 또는 터치의 X 좌표
@@ -33,6 +41,30 @@ const handleStart = (e, type) => {
     setStartY(clientY - dateY);  // 날짜 y 위치 저장
   }
   setIsDragging(true);  // 드래그 시작
+};
+useEffect(() => {
+  // 배경색이 변경될 때마다 텍스트 색상 업데이트
+  const rgb = hexToRgb(backgroundColor);
+  const rgbSum = rgb.r + rgb.g + rgb.b;
+
+  // 배경색의 RGB 합이 384(128*3) 이하이면 텍스트 색상을 흰색, 그 이상이면 검은색
+  if (rgbSum <= 384) {
+    setTextColor('#FFFFFF');  // 배경이 어두우면 텍스트는 흰색
+  } else {
+    setTextColor('#000000');  // 배경이 밝으면 텍스트는 검은색
+  }
+}, [backgroundColor]);
+ // HEX 색상을 RGB로 변환하는 함수
+ const hexToRgb = (hex) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+};
+
+const handleBackgroundColorChange = (e) => {
+  setBackgroundColor(e.target.value);
+  localStorage.setItem('backgroundColor', e.target.value);  // 배경색을 로컬스토리지에 저장
 };
 
 // 마우스 이동과 터치 이동 이벤트 공통 처리
@@ -67,6 +99,9 @@ const handleMove = (e, type) => {
 const handleEnd = () => {
   setIsDragging(false);  // 드래그 종료
 };
+const handleFullScreenToggle = () => {
+  setIsFullScreen(!isFullScreen);
+};
   // 시계를 매초마다 갱신
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -75,17 +110,25 @@ const handleEnd = () => {
 
     return () => clearInterval(intervalId);  // 컴포넌트가 언마운트되면 인터벌 클리어
   }, []);
+  const getLocale = () => {
+    const userLang = navigator.language.split('-')[0];  // 사용자의 언어 코드 (예: 'en', 'ko', 'fr' 등)
+  
+    // 'date-fns/locale'에서 해당 언어 로케일을 찾아서 반환
+    return locales[userLang] || locales.enUS;  // 지원되지 않는 언어는 기본 영어로 처리
+  };
+  
+  const locale = getLocale();  // 사용자의 로케일에 맞는 locale 객체 선택
 
   // 시간 포맷
-  const formattedTime = format(time, timeFormat);
+  const formattedTime = format(time, timeFormat, { locale });
 
   // 날짜 포맷 처리 (유효하지 않은 경우 기본 포맷으로 설정)
   let formattedDate = '';
   try {
-    formattedDate = dateFormat ? format(time, dateFormat) : format(time, 'yyyy-MM-dd eeee');
+    formattedDate = dateFormat ? format(time, dateFormat, { locale }) : format(time, 'yyyy-MM-dd eeee');
   } catch (error) {
     console.error('Invalid date format:', dateFormat);
-    formattedDate = format(time, 'yyyy-MM-dd eeee');  // 기본 포맷으로 설정
+    formattedDate = format(time, 'yyyy-MM-dd eeee', { locale });  // 기본 포맷으로 설정
   }
 
   // URL 입력 변경 처리
@@ -144,6 +187,7 @@ const handleEnd = () => {
 
   // 마우스 다운 이벤트 (드래그 시작)
   const handleMouseDown = (e, type) => {
+    handleClockMouseDown(); // 시계 터치 시작
     if (type === 'time') {
       setStartX(e.clientX - x);  // 시간 x 위치 저장
       setStartY(e.clientY - y);  // 시간 y 위치 저장
@@ -181,8 +225,10 @@ const handleEnd = () => {
 
   // 마우스 업 이벤트 (드래그 종료)
   const handleMouseUp = () => {
+    setTimeout(() => {
+      handleClockMouseUp(); // 시계 터치 종료
+    }, 100); // 100ms 뒤에 실행
     setIsDragging(false);  // 드래그 종료
-    
   };
 
   // 시간 크기 변경 처리 (슬라이더)
@@ -226,6 +272,18 @@ const handleEnd = () => {
     // 로컬 스토리지 초기화
     localStorage.clear();
   };
+// 배경 클릭 시 전체 화면 모드 해제
+const handleBackgroundClick = () => {
+  if (isFullScreen && !isClockTouching) {
+    setIsFullScreen(false); // 전체 화면 해제
+  }
+};
+const handleClockMouseDown = () => {
+  setIsClockTouching(true); // 시계를 터치 시작
+};
+const handleClockMouseUp = () => {
+  setIsClockTouching(false); // 시계 터치 종료
+};
   return (
     <div
     style={{
@@ -237,8 +295,29 @@ const handleEnd = () => {
       textAlign: 'center',
       padding: '20px',
       touchAction: 'none',
+      backgroundColor: backgroundColor,  // 배경색 적용
+      height: '100vh',
+        width: '100vw',
+        cursor: isFullScreen ? 'pointer' : 'default', // Pointer cursor when full screen
     }}
+    onClick={handleBackgroundClick} // 배경 클릭 시 전체화면 해제
   >
+     {/* Full Screen button */}
+     {!isFullScreen && (
+     <button
+        onClick={handleFullScreenToggle}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          padding: '10px',
+          fontSize: '16px',
+          cursor: 'pointer',
+        }}
+      >
+        {isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+      </button>
+      )}
     {/* 시계 부분: 윗쪽 고정 */}
     <div
         style={{
@@ -260,15 +339,15 @@ const handleEnd = () => {
           whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
           cursor: 'move',
           userSelect: 'none',
-    textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
-    padding: '5px'
+          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+          padding: '5px'
         }}
         onMouseDown={(e) => handleMouseDown(e, 'date')}  // 날짜 드래그 시작
         onMouseMove={(e) => handleMouseMove(e, 'date')}  // 날짜 드래그 중
         onMouseUp={handleMouseUp}                      // 드래그 종료
         onTouchStart={(e) => handleStart(e, 'date')}  // 시간 드래그 시작 (터치)
-  onTouchMove={(e) => handleMove(e, 'date')}   // 시간 드래그 중 (터치)
-  onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
+        onTouchMove={(e) => handleMove(e, 'date')}   // 시간 드래그 중 (터치)
+        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
       >
         {formattedDate}
       </h3>
@@ -291,23 +370,34 @@ const handleEnd = () => {
         onMouseMove={(e) => handleMouseMove(e, 'time')}  // 시간 드래그 중
         onMouseUp={handleMouseUp}                      // 드래그 종료
         onTouchStart={(e) => handleStart(e, 'time')}  // 시간 드래그 시작 (터치)
-  onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
-  onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
+        onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
+        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
       >
         {formattedTime}
       </h2>
     </div>
     {/* 옵션들: 스크롤 가능 */}
+    {!isFullScreen && (
     <div style={{ marginTop: '150px', overflowY: 'auto', maxHeight: 'calc(100vh - 270px)',border: '2px solid #ccc', }}>
+      {/* 배경색상 선택 */}
+      <div style={{ marginTop: '20px' }}>
+          <input
+            type="color"
+            value={backgroundColor}
+            onChange={handleBackgroundColorChange}
+            style={{ padding: '10px', fontSize: '16px', color: textColor }}
+          />
+          <span style={{ marginLeft: '10px', fontSize: '16px', color: textColor }}>Select Background Color</span>
+        </div>
       {/* 시간 색상 선택 */}
       <div style={{ marginTop: '20px' }}>
         <input
           type="color"
           value={timeColor}
           onChange={handleTimeColorChange}
-          style={{ padding: '10px', fontSize: '16px' }}
+          style={{ padding: '10px', fontSize: '16px', color: textColor }}
         />
-        <span style={{ marginLeft: '10px', fontSize: '16px' }}>Select Time Color</span>
+        <span style={{ marginLeft: '10px', fontSize: '16px', color: textColor }}>Select Time Color</span>
       </div>
 
       {/* 날짜 색상 선택 */}
@@ -316,9 +406,9 @@ const handleEnd = () => {
           type="color"
           value={dateColor}
           onChange={handleDateColorChange}
-          style={{ padding: '10px', fontSize: '16px' }}
+          style={{ padding: '10px', fontSize: '16px', color: textColor }}
         />
-        <span style={{ marginLeft: '10px', fontSize: '16px' }}>Select Date Color</span>
+        <span style={{ marginLeft: '10px', fontSize: '16px', color: textColor }}>Select Date Color</span>
       </div>
 
       {/* 날짜 포맷 입력 */}
@@ -328,7 +418,7 @@ const handleEnd = () => {
           value={dateFormat}
           onChange={handleDateFormatChange}
           placeholder="Enter Date Format (e.g., yyyy-MM-dd eeee)"
-          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
+          style={{ padding: '10px', width: '300px', fontSize: '16px', color: textColor, backgroundColor: backgroundColor }}
         />
       </div>
 
@@ -339,17 +429,17 @@ const handleEnd = () => {
           value={timeFormat}
           onChange={handleTimeFormatChange}
           placeholder="Enter Time Format (e.g., HH:mm:ss)"
-          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
+          style={{ padding: '10px', width: '300px', fontSize: '16px', color: textColor, backgroundColor: backgroundColor }}
         />
       </div>
 
       {/* 시간 크기 조절 */}
       <div style={{ marginTop: '20px' }}>
-        <label style={{ fontSize: '16px' }}>Time Size: </label>
+        <label style={{ fontSize: '16px', color: textColor }}>Time Size: </label>
         <input
           type="range"
           min="10"
-          max="100"
+          max="500"
           value={timeSize}
           onChange={handleTimeSizeChange}
           style={{ marginLeft: '10px', width: '200px' }}
@@ -358,11 +448,11 @@ const handleEnd = () => {
 
       {/* 날짜 크기 조절 */}
       <div style={{ marginTop: '20px' }}>
-        <label style={{ fontSize: '16px' }}>Date Size: </label>
+        <label style={{ fontSize: '16px', color: textColor }}>Date Size: </label>
         <input
           type="range"
           min="10"
-          max="100"
+          max="500"
           value={dateSize}
           onChange={handleDateSizeChange}
           style={{ marginLeft: '10px', width: '200px' }}
@@ -371,11 +461,11 @@ const handleEnd = () => {
 {/* 그림자 색상 */}
 <div style={{ marginTop: '20px' }}>
   <input type="color" value={shadowColor} onChange={handleShadowColorChange} />
-  <span style={{ marginLeft: '10px' }}>Shadow Color</span>
+  <span style={{ marginLeft: '10px', color: textColor }}>Shadow Color</span>
 </div>
 
 {/* 그림자 크기 */}
-<div style={{ marginTop: '20px' }}>
+<div style={{ marginTop: '20px', color: textColor }}>
   <label>Shadow Size: </label>
   <input type="range" min="0" max="20" value={shadowSize} onChange={handleShadowSizeChange} />
   <span>{shadowSize}px</span>
@@ -384,7 +474,7 @@ const handleEnd = () => {
   <div style={{ marginTop: '20px' }}>
         <button
           onClick={handleReset}
-          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
+          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
         >
           Reset to Default
         </button>
@@ -396,7 +486,7 @@ const handleEnd = () => {
           value={url}
           onChange={handleUrlChange}
           placeholder="Enter URL for QR code"
-          style={{ padding: '10px', width: '300px', fontSize: '16px' }}
+          style={{ padding: '10px', width: '300px', fontSize: '16px', color: textColor, backgroundColor: backgroundColor }}
         />
       </div>
 
@@ -404,7 +494,7 @@ const handleEnd = () => {
       <div style={{ marginTop: '20px' }}>
         <button
           onClick={handleGenerateQR}
-          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}
+          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
         >
           Generate QR Code
         </button>
@@ -418,6 +508,7 @@ const handleEnd = () => {
         </div>
       )}
     </div>
+      )}
     </div>
   );
 };
