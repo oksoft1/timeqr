@@ -194,6 +194,7 @@ const handleEnd = () => {
       setStartY(e.clientY - dateY);  // 날짜 y 위치 저장
     }
     setIsDragging(true);  // 드래그 시작
+    document.body.style.overflow = 'hidden';  // 드래그 시작 시 스크롤 방지
   };
 
   // 마우스 이동 이벤트 (드래그 중)
@@ -224,6 +225,7 @@ const handleEnd = () => {
   // 마우스 업 이벤트 (드래그 종료)
   const handleMouseUp = () => {
     setIsDragging(false);  // 드래그 종료
+    document.body.style.overflow = ''; // 드래그 끝나면 스크롤을 다시 활성화
   };
 
   // 시간 크기 변경 처리 (슬라이더)
