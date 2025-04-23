@@ -21,6 +21,46 @@ const App = () => {
   const [dateSize, setDateSize] = useState(Number(localStorage.getItem('dateSize')) || 50);  // 날짜 크기 상태
   const [shadowColor, setShadowColor] = useState(localStorage.getItem('shadowColor') || '#000000');
   const [shadowSize, setShadowSize] = useState(Number(localStorage.getItem('shadowSize')) || 2);
+  const BatteryStatus = () => {
+    const [battery, setBattery] = useState({
+      level: 1,
+      charging: true,
+    });
+  
+    useEffect(() => {
+      const getBatteryStatus = async () => {
+        const battery = await navigator.getBattery();
+        setBattery({
+          level: battery.level,
+          charging: battery.charging,
+        });
+  
+        // 배터리 상태가 변경될 때마다 업데이트
+        battery.addEventListener('levelchange', () => {
+          setBattery({ level: battery.level, charging: battery.charging });
+        });
+  
+        battery.addEventListener('chargingchange', () => {
+          setBattery({ level: battery.level, charging: battery.charging });
+        });
+      };
+  
+      getBatteryStatus();
+  
+      // Cleanup when component unmounts
+      return () => {
+        // You can remove event listeners here if necessary
+      };
+    }, []);
+  
+    return (
+      <div>
+        <h4>Battery Status</h4>
+        <p>Battery Level: {(battery.level * 100).toFixed(0)}%</p>
+        <p>Charging: {battery.charging ? 'Yes' : 'No'}</p>
+      </div>
+    );
+  };
   
   // 시계를 매초마다 갱신
   useEffect(() => {
@@ -305,7 +345,8 @@ const App = () => {
   <input type="range" min="0" max="20" value={shadowSize} onChange={handleShadowSizeChange} />
   <span>{shadowSize}px</span>
 </div>
-
+   {/* 배터리 상태 컴포넌트 추가 */}
+   <BatteryStatus />
   {/* 초기화 버튼 */}
   <div style={{ marginTop: '20px' }}>
         <button
