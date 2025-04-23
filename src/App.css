@@ -10,23 +10,13 @@
 h1 {
   font-size: 2em;
 }
-body {
-  overflow: hidden;  /* 페이지 스크롤 방지 */
-}
 
-html {
-  touch-action: none;  /* 터치 스크롤 방지 */
-}
 h2 {
   font-size: 3em;
   margin-top: 20px;
   letter-spacing: 3px;
-  cursor: grab;  /* 드래그 가능한 커서로 변경 */
-  z-index: 1000;  /* 항상 위에 표시되도록 설정 */
 }
-h2:active {
-  cursor: grabbing;  /* 드래그 중 커서 */
-}
+
 
 .App-logo {
   height: 40vmin;
