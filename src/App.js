@@ -4,6 +4,8 @@ import { format } from 'date-fns';  // 날짜 포맷 라이브러리 import
 
 const App = () => {
   const [time, setTime] = useState(new Date());  // 시간 상태
+  const [isDraggingTime, setIsDraggingTime] = useState(false); // 시간 드래그 상태
+  const [isDraggingDate, setIsDraggingDate] = useState(false); // 날짜 드래그 상태
   const [url, setUrl] = useState('');  // URL 상태
   const [qrCodeUrl, setQrCodeUrl] = useState('');  // QR 코드 URL 상태
   const [timeColor, setTimeColor] = useState(localStorage.getItem('timeColor') || '#A8E6CF');  // 시간 색상 상태
@@ -187,14 +189,16 @@ const handleEnd = () => {
   // 마우스 다운 이벤트 (드래그 시작)
   const handleMouseDown = (e, type) => {
     if (type === 'time') {
-      setStartX(e.clientX - x);  // 시간 x 위치 저장
-      setStartY(e.clientY - y);  // 시간 y 위치 저장
-    } else {
-      setStartX(e.clientX - dateX);  // 날짜 x 위치 저장
-      setStartY(e.clientY - dateY);  // 날짜 y 위치 저장
+      setStartX(e.clientX - x);
+      setStartY(e.clientY - y);
+      setIsDraggingTime(true);
+      document.body.style.overflow = 'hidden'; // 스크롤 막기
+    } else if (type === 'date') {
+      setStartX(e.clientX - dateX);
+      setStartY(e.clientY - dateY);
+      setIsDraggingDate(true);
+      document.body.style.overflow = 'hidden'; // 스크롤 막기
     }
-    setIsDragging(true);  // 드래그 시작
-    document.body.style.overflow = 'hidden';  // 드래그 시작 시 스크롤 방지
   };
 
   // 마우스 이동 이벤트 (드래그 중)
@@ -209,7 +213,7 @@ const handleEnd = () => {
         setY(newY);  // y 좌표 업데이트
         localStorage.setItem('timeX', newX);  // 새로운 위치 저장
         localStorage.setItem('timeY', newY);
-      } else {
+      } else if (type === 'date') {
         // 날짜의 경우
         const newDateX = e.clientX - startX;
         const newDateY = e.clientY - startY;
@@ -224,8 +228,9 @@ const handleEnd = () => {
 
   // 마우스 업 이벤트 (드래그 종료)
   const handleMouseUp = () => {
-    setIsDragging(false);  // 드래그 종료
-    document.body.style.overflow = ''; // 드래그 끝나면 스크롤을 다시 활성화
+    setIsDraggingTime(false);
+    setIsDraggingDate(false);
+    document.body.style.overflow = 'auto'; // 드래그 후 스크롤 허용
   };
 
   // 시간 크기 변경 처리 (슬라이더)
