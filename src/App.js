@@ -21,6 +21,53 @@ const App = () => {
   const [dateSize, setDateSize] = useState(Number(localStorage.getItem('dateSize')) || 50);  // 날짜 크기 상태
   const [shadowColor, setShadowColor] = useState(localStorage.getItem('shadowColor') || '#000000');
   const [shadowSize, setShadowSize] = useState(Number(localStorage.getItem('shadowSize')) || 2);
+  // 마우스 다운과 터치 시작 이벤트 공통 처리
+const handleStart = (e, type) => {
+  const clientX = e.clientX || e.touches[0].clientX;  // 마우스 또는 터치의 X 좌표
+  const clientY = e.clientY || e.touches[0].clientY;  // 마우스 또는 터치의 Y 좌표
+
+  if (type === 'time') {
+    setStartX(clientX - x);  // 시간 x 위치 저장
+    setStartY(clientY - y);  // 시간 y 위치 저장
+  } else {
+    setStartX(clientX - dateX);  // 날짜 x 위치 저장
+    setStartY(clientY - dateY);  // 날짜 y 위치 저장
+  }
+  setIsDragging(true);  // 드래그 시작
+};
+
+// 마우스 이동과 터치 이동 이벤트 공통 처리
+const handleMove = (e, type) => {
+  if (isDragging) {
+    const clientX = e.clientX || e.touches[0].clientX;  // 마우스 또는 터치의 X 좌표
+    const clientY = e.clientY || e.touches[0].clientY;  // 마우스 또는 터치의 Y 좌표
+
+    if (type === 'time') {
+      // 시간의 경우
+      const newX = clientX - startX;
+      const newY = clientY - startY;
+
+      setX(newX);  // x 좌표 업데이트
+      setY(newY);  // y 좌표 업데이트
+      localStorage.setItem('timeX', newX);  // 새로운 위치 저장
+      localStorage.setItem('timeY', newY);
+    } else {
+      // 날짜의 경우
+      const newDateX = clientX - startX;
+      const newDateY = clientY - startY;
+
+      setDateX(newDateX);  // 날짜 x 좌표 업데이트
+      setDateY(newDateY);  // 날짜 y 좌표 업데이트
+      localStorage.setItem('dateX', newDateX);  // 새로운 위치 저장
+      localStorage.setItem('dateY', newDateY);
+    }
+  }
+};
+
+// 마우스 업과 터치 종료 이벤트 공통 처리
+const handleEnd = () => {
+  setIsDragging(false);  // 드래그 종료
+};
   const BatteryStatus = () => {
     const [battery, setBattery] = useState({
       level: 1,
@@ -240,6 +287,9 @@ const App = () => {
         onMouseDown={(e) => handleMouseDown(e, 'date')}  // 날짜 드래그 시작
         onMouseMove={(e) => handleMouseMove(e, 'date')}  // 날짜 드래그 중
         onMouseUp={handleMouseUp}                      // 드래그 종료
+        onTouchStart={(e) => handleStart(e, 'time')}  // 시간 드래그 시작 (터치)
+  onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
+  onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
       >
         {formattedDate}
       </h3>
@@ -260,6 +310,9 @@ const App = () => {
         onMouseDown={(e) => handleMouseDown(e, 'time')}  // 시간 드래그 시작
         onMouseMove={(e) => handleMouseMove(e, 'time')}  // 시간 드래그 중
         onMouseUp={handleMouseUp}                      // 드래그 종료
+        onTouchStart={(e) => handleStart(e, 'time')}  // 시간 드래그 시작 (터치)
+  onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
+  onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
       >
         {formattedTime}
       </h2>
