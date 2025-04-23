@@ -236,6 +236,7 @@ const handleEnd = () => {
       zIndex: 10, // 시계가 항상 위에 보이도록 설정
       textAlign: 'center',
       padding: '20px',
+      touchAction: 'none',
     }}
   >
     {/* 시계 부분: 윗쪽 고정 */}
