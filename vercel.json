@@ -1,10 +1,9 @@
 {
-  "functions": {
-    "api/count.js": {
-      "maxDuration": 30
+  "version": 2,
+  "builds": [
+    {
+      "src": "pages/api/count.js",
+      "use": "@vercel/node"
     }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
