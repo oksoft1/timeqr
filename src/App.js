@@ -521,8 +521,8 @@ const handleClockMouseUp = () => {
         </div>
       )}
  <div className="App">
-      <h1>방문자 수</h1>
-      <p>{count === null ? '로딩 중...' : `현재 방문자 수: ${count}`}</p>
+      <h1>Number of visitors</h1>
+      <p>{count === null ? 'Loading...' : `Current number of visitors: ${count}`}</p>
     </div>
     </div>
       )}
