@@ -28,18 +28,21 @@ const App = () => {
   const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
   const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
   const [isClockVisible, setIsClockVisible] = useState(true); // 시계 표시 여부 상태 추가
-  const [visitorCount, setVisitorCount] = useState(0);
+  const [visitorCount, setVisitorCount] = useState({ total: 0, today: 0 });
 
   useEffect(() => {
     // 서버less 함수로 API 호출
     fetch('/api/visitor')
       .then(response => response.json())
       .then(data => {
-        setVisitorCount(data.visitorCount || 0);  // 방문자 수 업데이트
+        setVisitorCount({
+          total: data.total || 0,
+          today: data.today || 0
+        });
       })
       .catch(error => {
         console.error('Error fetching visitor count:', error);
-        setVisitorCount(0);  // 오류 발생 시 0으로 설정
+        setVisitorCount({ total: 0, today: 0 });
       });
   }, []);
 
@@ -632,11 +635,14 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
-       {/* 방문자 카운터 UI */}
-       {visitorCount !== null && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>현재 방문자 수: {visitorCount}</h3>
-        </div>
+ <div style={{ marginTop: '20px' }}>
+  <div style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#f4f4f4' }}>
+    <h3>총 방문자 수: {visitorCount.total}</h3>
+  </div>
+  <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#f4f4f4' }}>
+    <h3>오늘 방문자 수: {visitorCount.today}</h3>
+  </div>
+</div>
       )}
     </div>
       )}
