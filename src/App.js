@@ -27,18 +27,6 @@ const App = () => {
   const [textColor, setTextColor] = useState('#000000');  // 텍스트 기본색은 검정
   const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
   const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
-  const [count, setCount] = useState(null);
-  useEffect(() => {
-    // API 호출하여 방문자 수 가져오기
-    const fetchVisitorCount = async () => {
-      const response = await fetch('/api/count'); // Vercel의 API를 호출
-      const data = await response.json();
-      setCount(data.count);
-    };
-
-    fetchVisitorCount();
-  }, []);
-
 
   // 마우스 다운과 터치 시작 이벤트 공통 처리
 const handleStart = (e, type) => {
@@ -520,10 +508,6 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
- <div className="App">
-      <h1>Number of visitors</h1>
-      <p>{count === null ? 'Loading...' : `Current number of visitors: ${count}`}</p>
-    </div>
     </div>
       )}
     </div>
