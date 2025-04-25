@@ -11,9 +11,9 @@ const App = () => {
   const [dateColor, setDateColor] = useState(localStorage.getItem('dateColor') || '#33A1FF');  // 날짜 색상 상태
   const [timeFormat, setTimeFormat] = useState(localStorage.getItem('timeFormat') || 'HH:mm:ss');  // 시간 포맷 상태
   const [dateFormat, setDateFormat] = useState(localStorage.getItem('dateFormat') || 'yyyy-MM-dd eeee');  // 날짜 포맷 상태
-  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || -180);  // 시간 x 좌표
+  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 580);  // 시간 x 좌표
   const [y, setY] = useState(Number(localStorage.getItem('timeY')) || -80);  // 시간 y 좌표
-  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || -180);  // 날짜 x 좌표
+  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 640);  // 날짜 x 좌표
   const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || 70);  // 날짜 y 좌표
   const [isDragging, setIsDragging] = useState(false);  // 드래그 상태
   const [startX, setStartX] = useState(0);  // 드래그 시작 x 좌표
@@ -27,7 +27,62 @@ const App = () => {
   const [textColor, setTextColor] = useState('#000000');  // 텍스트 기본색은 검정
   const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
   const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
+  const [isClockVisible, setIsClockVisible] = useState(true); // 시계 표시 여부 상태 추가
+  const [visitorCount, setVisitorCount] = useState(0);
 
+  useEffect(() => {
+    // 서버less 함수로 API 호출
+    fetch('/api/visitor')
+      .then(response => response.json())
+      .then(data => {
+        setVisitorCount(data.visitorCount || 0);  // 방문자 수 업데이트
+      })
+      .catch(error => {
+        console.error('Error fetching visitor count:', error);
+        setVisitorCount(0);  // 오류 발생 시 0으로 설정
+      });
+  }, []);
+
+  const handleTimePositionX = (e) => {
+    const newX = Number(e.target.value);
+    setX(newX);
+    localStorage.setItem('timeX', newX);  // 시간 x 좌표 저장
+  }
+  const handleTimePositioY = (e) => {
+    const newY = Number(e.target.value);
+    setY(newY);
+    localStorage.setItem('timeY', newY);  // 시간 y 좌표 저장
+  }
+  const handleDatePositionX = (e) => {
+    const newX = Number(e.target.value);
+    setDateX(newX);
+    localStorage.setItem('dateX', newX);  // 날짜 x 좌표 저장
+  }
+  const handleDatePositionY = (e) => {
+    const newY = Number(e.target.value);
+    setDateY(newY);
+    localStorage.setItem('dateY', newY);  // 날짜 y 좌표 저장
+  }
+  // 시계 표시 여부를 토글하는 함수
+  const handleClockToggle = () => {
+    setIsClockVisible(prev => !prev); // 시계 표시 여부 반전
+  };
+  const handleRandomClockColor = () => {
+    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // 랜덤 색상 생성
+    setTimeColor(randomColor); // 시간 색상 업데이트
+    const randomColor1 = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // 랜덤 색상 생성
+    setDateColor(randomColor1); // 날짜 색상 업데이트
+    const randomColor2 = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // 랜덤 색상 생성
+    setShadowColor(randomColor2); // 그림자 색상 업데이트
+    localStorage.setItem('shadowColor', randomColor2); // 로컬 스토리지에 저장
+    localStorage.setItem('timeColor', randomColor); // 로컬 스토리지에 저장
+    localStorage.setItem('dateColor', randomColor1); // 로컬 스토리지에 저장
+  }
+  const handleRandomUIColor = () => {
+    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`; // 랜덤 색상 생성
+    setBackgroundColor(randomColor); // 배경색상 업데이트
+    localStorage.setItem('backgroundColor', randomColor); // 로컬 스토리지에 저장
+  }
   // 마우스 다운과 터치 시작 이벤트 공통 처리
 const handleStart = (e, type) => {
   const clientX = e.clientX || e.touches[0].clientX;  // 마우스 또는 터치의 X 좌표
@@ -264,11 +319,19 @@ const handleFullScreenToggle = () => {
     setDateFormat('yyyy-MM-dd eeee');
     setTimeSize(90);
     setDateSize(30);
-    setX(-180);
+    setX(580);
     setY(-80);
-    setDateX(-180);
+    setDateX(640);
     setDateY(70);
     setShadowSize(2);
+    setShadowColor('#000000');
+    setBackgroundColor('#FFFFFF'); // 기본 배경색은 흰색
+    setTextColor('#000000'); // 기본 텍스트 색상은 검정색
+    setUrl(''); // URL 초기화
+    setQrCodeUrl(''); // QR 코드 URL 초기화
+    setIsFullScreen(false); // 전체 화면 해제
+    setIsClockTouching(false); // 시계 터치 해제
+    setIsClockVisible(true); // 시계 보이기
 
     // 로컬 스토리지 초기화
     localStorage.clear();
@@ -303,22 +366,7 @@ const handleClockMouseUp = () => {
     }}
     onClick={handleBackgroundClick} // 배경 클릭 시 전체화면 해제
   >
-     {/* Full Screen button */}
-     {!isFullScreen && (
-     <button
-        onClick={handleFullScreenToggle}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          padding: '10px',
-          fontSize: '16px',
-          cursor: 'pointer',
-        }}
-      >
-        {isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
-      </button>
-      )}
+    
     {/* 시계 부분: 윗쪽 고정 */}
     <div
         style={{
@@ -329,57 +377,30 @@ const handleClockMouseUp = () => {
           zIndex: '1000',
         }}
       >
-   {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
-   <h3
-        style={{
-          color: dateColor,
-          fontSize: `${dateSize}px`,
-          position: 'absolute',
-          top: `${dateY}px`,
-          left: `${dateX}px`,
-          whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
-          cursor: 'move',
-          userSelect: 'none',
-          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
-          padding: '5px'
-        }}
-        onMouseDown={(e) => handleMouseDown(e, 'date')}  // 날짜 드래그 시작
-        onMouseMove={(e) => handleMouseMove(e, 'date')}  // 날짜 드래그 중
-        onMouseUp={handleMouseUp}                      // 드래그 종료
-        onTouchStart={(e) => handleStart(e, 'date')}  // 시간 드래그 시작 (터치)
-        onTouchMove={(e) => handleMove(e, 'date')}   // 시간 드래그 중 (터치)
-        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
-      >
-        {formattedDate}
-      </h3>
-
-      {/* 시간 표시 (색상, 크기, 위치, 포맷 적용) */}
-      <h2
-        style={{
-          color: timeColor,
-          fontSize: `${timeSize}px`,
-          position: 'absolute',
-          top: `${y}px`,
-          left: `${x}px`,
-          whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
-          cursor: 'move',
-          userSelect: 'none',
-          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
-          padding: '5px',
-        }}
-        onMouseDown={(e) => handleMouseDown(e, 'time')}  // 시간 드래그 시작
-        onMouseMove={(e) => handleMouseMove(e, 'time')}  // 시간 드래그 중
-        onMouseUp={handleMouseUp}                      // 드래그 종료
-        onTouchStart={(e) => handleStart(e, 'time')}  // 시간 드래그 시작 (터치)
-        onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
-        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
-      >
-        {formattedTime}
-      </h2>
     </div>
     {/* 옵션들: 스크롤 가능 */}
     {!isFullScreen && (
     <div style={{ marginTop: '150px', overflowY: 'auto', maxHeight: 'calc(100vh - 270px)',border: '2px solid #ccc', }}>
+       {/* Full Screen button */}
+     {!isFullScreen && (
+        <div style={{ marginTop: '20px' }}>
+        <button
+          onClick={handleFullScreenToggle}
+          style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
+        >
+          {isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+        </button>
+      </div>
+      )}
+      {/* 시계 숨기기/보이기 버튼 추가 */}
+          <div style={{ marginTop: '20px' }}>
+            <button
+              onClick={handleClockToggle}
+              style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
+            >
+              {isClockVisible ? 'Hide Clock' : 'Show Clock'}
+            </button>
+          </div>
       {/* 배경색상 선택 */}
       <div style={{ marginTop: '20px' }}>
           <input
@@ -433,6 +454,93 @@ const handleClockMouseUp = () => {
           style={{ padding: '10px', width: '300px', fontSize: '16px', color: textColor, backgroundColor: backgroundColor }}
         />
       </div>
+      <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+  <label style={{ fontSize: '16px', color: textColor }}>Time Position X: </label>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <input
+      type="range"
+      min="-1000"
+      max="1000"
+      value={x}
+      onChange={handleTimePositionX}
+      style={{ marginLeft: '10px', width: '200px' }}
+    />
+    <input
+      type="number"
+      value={x}
+      onChange={handleTimePositionX}
+      style={{ marginLeft: '10px', width: '60px' }}
+      min="-1000"
+      max="1000"
+    />
+  </div>
+</div>
+
+<div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+  <label style={{ fontSize: '16px', color: textColor }}>Time Position Y: </label>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <input
+      type="range"
+      min="-1000"
+      max="1000"
+      value={y}
+      onChange={handleTimePositioY}
+      style={{ marginLeft: '10px', width: '200px' }}
+    />
+    <input
+      type="number"
+      value={y}
+      onChange={handleTimePositioY}
+      style={{ marginLeft: '10px', width: '60px' }}
+      min="-1000"
+      max="1000"
+    />
+  </div>
+</div>
+
+<div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+  <label style={{ fontSize: '16px', color: textColor }}>Date Position X: </label>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <input
+      type="range"
+      min="-1000"
+      max="1000"
+      value={dateX}
+      onChange={handleDatePositionX}
+      style={{ marginLeft: '10px', width: '200px' }}
+    />
+    <input
+      type="number"
+      value={dateX}
+      onChange={handleDatePositionX}
+      style={{ marginLeft: '10px', width: '60px' }}
+      min="-1000"
+      max="1000"
+    />
+  </div>
+</div>
+
+<div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+  <label style={{ fontSize: '16px', color: textColor }}>Date Position Y: </label>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <input
+      type="range"
+      min="-1000"
+      max="1000"
+      value={dateY}
+      onChange={handleDatePositionY}
+      style={{ marginLeft: '10px', width: '200px' }}
+    />
+    <input
+      type="number"
+      value={dateY}
+      onChange={handleDatePositionY}
+      style={{ marginLeft: '10px', width: '60px' }}
+      min="-1000"
+      max="1000"
+    />
+  </div>
+</div>
 
       {/* 시간 크기 조절 */}
       <div style={{ marginTop: '20px' }}>
@@ -471,6 +579,22 @@ const handleClockMouseUp = () => {
   <input type="range" min="0" max="20" value={shadowSize} onChange={handleShadowSizeChange} />
   <span>{shadowSize}px</span>
 </div>
+<div style={{ marginTop: '20px' }}>
+            <button
+              onClick={handleRandomClockColor}
+              style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
+            >
+              Random Clock Color
+            </button>
+          </div>
+          <div style={{ marginTop: '20px' }}>
+            <button
+              onClick={handleRandomUIColor}
+              style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
+            >
+              Random UI Color
+            </button>
+          </div>
   {/* 초기화 버튼 */}
   <div style={{ marginTop: '20px' }}>
         <button
@@ -508,7 +632,64 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
+       {/* 방문자 카운터 UI */}
+       {visitorCount !== null && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>현재 방문자 수: {visitorCount}</h3>
+        </div>
+      )}
     </div>
+      )}
+       {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
+   {isClockVisible && (
+   <h3
+        style={{
+          color: dateColor,
+          fontSize: `${dateSize}px`,
+          position: 'absolute',
+          top: `${dateY}px`,
+          left: `${dateX}px`,
+          whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
+          cursor: 'move',
+          userSelect: 'none',
+          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+          padding: '5px',
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'date')}  // 날짜 드래그 시작
+        onMouseMove={(e) => handleMouseMove(e, 'date')}  // 날짜 드래그 중
+        onMouseUp={handleMouseUp}                      // 드래그 종료
+        onTouchStart={(e) => handleStart(e, 'date')}  // 시간 드래그 시작 (터치)
+        onTouchMove={(e) => handleMove(e, 'date')}   // 시간 드래그 중 (터치)
+        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
+      >
+        {formattedDate}
+      </h3>
+   )}
+
+      {/* 시간 표시 (색상, 크기, 위치, 포맷 적용) */}
+      {isClockVisible && (
+      <h2
+        style={{
+          color: timeColor,
+          fontSize: `${timeSize}px`,
+          position: 'absolute',
+          top: `${y}px`,
+          left: `${x}px`,
+          whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
+          cursor: 'move',
+          userSelect: 'none',
+          textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+          padding: '5px',
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'time')}  // 시간 드래그 시작
+        onMouseMove={(e) => handleMouseMove(e, 'time')}  // 시간 드래그 중
+        onMouseUp={handleMouseUp}                      // 드래그 종료
+        onTouchStart={(e) => handleStart(e, 'time')}  // 시간 드래그 시작 (터치)
+        onTouchMove={(e) => handleMove(e, 'time')}   // 시간 드래그 중 (터치)
+        onTouchEnd={handleEnd}                     // 드래그 종료 (터치)
+      >
+        {formattedTime}
+      </h2>
       )}
     </div>
   );
