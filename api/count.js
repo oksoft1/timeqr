@@ -1,10 +1,34 @@
-// api/count.js
-let count = 0;  // 방문자 수를 초기화
+// /api/count.js
+import { MongoClient } from 'mongodb';
 
-export default function handler(req, res) {
-  // 요청이 들어올 때마다 카운트를 증가시킵니다.
-  count++;
+const uri = 'YOUR_MONGODB_CONNECTION_STRING';
+const client = new MongoClient(uri);
 
-  // 카운트를 반환합니다.
-  res.status(200).json({ count });
+export default async function handler(req, res) {
+  try {
+    await client.connect();
+    const database = client.db('visitorDb');
+    const visitors = database.collection('visitors');
+
+    // 방문자 수를 찾거나 초기화
+    const visitor = await visitors.findOne({ name: 'visitor' });
+
+    if (!visitor) {
+      await visitors.insertOne({ name: 'visitor', count: 1 });
+      return res.status(200).json({ count: 1 });
+    }
+
+    const updatedCount = visitor.count + 1;
+    await visitors.updateOne(
+      { name: 'visitor' },
+      { $set: { count: updatedCount } }
+    );
+
+    res.status(200).json({ count: updatedCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error accessing database' });
+  } finally {
+    await client.close();
+  }
 }
