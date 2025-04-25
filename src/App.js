@@ -635,14 +635,12 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
-       {/* 방문자 카운터 UI */}
        <div>
-      <h1>방문자 카운터</h1>
-      {/* 방문자 카운터 UI */}
+      <h1>Visitor counter</h1>
       {visitorCount !== null && (
         <div style={{ marginTop: '20px' }}>
-          <h3>총 방문자 수: {visitorCount.total}</h3>
-          <h3>오늘 방문자 수: {visitorCount.today}</h3>
+          <h3>Today: {visitorCount.today}</h3>
+          <h3>Total: {visitorCount.total}</h3>
         </div>
       )}
     </div>
