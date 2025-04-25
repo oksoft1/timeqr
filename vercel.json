@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "pages/api/count.js",
-      "use": "@vercel/node"
-    }
-  ]
-}
