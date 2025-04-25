@@ -28,20 +28,25 @@ const App = () => {
   const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
   const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
   const [isClockVisible, setIsClockVisible] = useState(true); // 시계 표시 여부 상태 추가
-  const [visitorCount, setVisitorCount] = useState(0);
+ // 전체 방문자 수와 오늘 방문자 수를 각각 상태로 관리
+ const [visitorCount, setVisitorCount] = useState(0);
+ const [todayVisitorCount, setTodayVisitorCount] = useState(0);
 
-  useEffect(() => {
-    // 서버less 함수로 API 호출
-    fetch('/api/visitor')
-      .then(response => response.json())
-      .then(data => {
-        setVisitorCount(data.visitorCount || 0);  // 방문자 수 업데이트
-      })
-      .catch(error => {
-        console.error('Error fetching visitor count:', error);
-        setVisitorCount(0);  // 오류 발생 시 0으로 설정
-      });
-  }, []);
+ useEffect(() => {
+   // 서버less 함수로 API 호출
+   fetch('/api/visitor')
+     .then(response => response.json())
+     .then(data => {
+       // 방문자 수와 오늘 방문자 수 업데이트
+       setVisitorCount(data.visitorCount || 0);
+       setTodayVisitorCount(data.todayVisitorCount || 0);
+     })
+     .catch(error => {
+       console.error('Error fetching visitor count:', error);
+       setVisitorCount(0);  // 오류 발생 시 0으로 설정
+       setTodayVisitorCount(0);  // 오류 발생 시 0으로 설정
+     });
+ }, []);  // 의존성 배열이 비어있어 처음 컴포넌트가 마운트될 때만 호출됨
 
   const handleTimePositionX = (e) => {
     const newX = Number(e.target.value);
@@ -632,12 +637,11 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
-       {/* 방문자 카운터 UI */}
-       {visitorCount !== null && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>현재 방문자 수: {visitorCount}</h3>
-        </div>
-      )}
+       <div>
+      <h1>Number of visitors</h1>
+      <p>Number of visitors today: {todayVisitorCount}</p>
+      <p>Total number of visitors: {visitorCount}</p>
+    </div>
     </div>
       )}
        {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
