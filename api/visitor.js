@@ -1,3 +1,4 @@
+// api/visitor.js
 import db from '../server/firebase-admin';
 
 export default async function handler(req, res) {
@@ -17,9 +18,19 @@ export default async function handler(req, res) {
 
       // 트랜잭션으로 방문자 수를 안전하게 증가시킴
       await ref.transaction(currentCount => {
+        // currentCount가 null 또는 undefined일 경우 기본값 설정
+        if (currentCount === null || currentCount === undefined) {
+          return {
+            total: 1,
+            today: 1,
+            lastResetDate: today,
+          };
+        }
+        
+        // 방문자 수 증가
         return {
-          total: (currentCount?.total || 0) + 1,
-          today: (currentCount?.today || 0) + 1,
+          total: currentCount.total + 1,
+          today: currentCount.today + 1,
           lastResetDate: today
         };
       });
@@ -32,6 +43,7 @@ export default async function handler(req, res) {
         total: updatedVisitorCount.total,
         today: updatedVisitorCount.today
       });
+
     } catch (error) {
       res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }

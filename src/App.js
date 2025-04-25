@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';  // QR 코드 라이브러리 import
 import { format } from 'date-fns';  // 날짜 포맷 라이브러리 import
