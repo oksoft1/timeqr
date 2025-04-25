@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';  // QR 코드 라이브러리 import
 import { format } from 'date-fns';  // 날짜 포맷 라이브러리 import
@@ -29,21 +28,18 @@ const App = () => {
   const [isFullScreen, setIsFullScreen] = useState(false); // Full screen state
   const [isClockTouching, setIsClockTouching] = useState(false); // 시계를 터치하고 있는지 여부
   const [isClockVisible, setIsClockVisible] = useState(true); // 시계 표시 여부 상태 추가
-  const [visitorCount, setVisitorCount] = useState({ total: 0, today: 0 });
+  const [visitorCount, setVisitorCount] = useState(0);
 
   useEffect(() => {
     // 서버less 함수로 API 호출
     fetch('/api/visitor')
       .then(response => response.json())
       .then(data => {
-        setVisitorCount({
-          total: data.total || 0,
-          today: data.today || 0
-        });
+        setVisitorCount(data.visitorCount || 0);  // 방문자 수 업데이트
       })
       .catch(error => {
         console.error('Error fetching visitor count:', error);
-        setVisitorCount({ total: 0, today: 0 });
+        setVisitorCount(0);  // 오류 발생 시 0으로 설정
       });
   }, []);
 
@@ -636,15 +632,12 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
-       <div>
-      <h1>Visitor counter</h1>
-      {visitorCount !== null && (
+       {/* 방문자 카운터 UI */}
+       {visitorCount !== null && (
         <div style={{ marginTop: '20px' }}>
-          <h3>Today: {visitorCount.today}</h3>
-          <h3>Total: {visitorCount.total}</h3>
+          <h3>현재 방문자 수: {visitorCount}</h3>
         </div>
       )}
-    </div>
     </div>
       )}
        {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
