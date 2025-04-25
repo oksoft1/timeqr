@@ -1,16 +1,20 @@
-// /api/count.js
-import { MongoClient } from 'mongodb';
+// api/count.js
+const { MongoClient } = require('mongodb');
 
-const uri = process.env.MONGODB_URI; // Vercel 환경 변수에서 MongoDB 연결 문자열을 읽어옵니다.
-const client = new MongoClient(uri);
+let cachedClient = null;
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+  const uri = process.env.MONGODB_URI;
+
+  if (!cachedClient) {
+    cachedClient = new MongoClient(uri);
+    await cachedClient.connect();
+  }
+
+  const database = cachedClient.db('visitorDb');
+  const visitors = database.collection('visitors');
+
   try {
-    await client.connect();
-    const database = client.db('visitorDb'); // MongoDB에서 설정한 데이터베이스 이름
-    const visitors = database.collection('visitors'); // MongoDB에서 설정한 컬렉션 이름
-
-    // 방문자 수를 찾거나 초기화
     const visitor = await visitors.findOne({ name: 'visitor' });
 
     if (!visitor) {
@@ -24,11 +28,9 @@ export default async function handler(req, res) {
       { $set: { count: updatedCount } }
     );
 
-    res.status(200).json({ count: updatedCount });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error accessing database' });
-  } finally {
-    await client.close();
+    return res.status(200).json({ count: updatedCount });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
