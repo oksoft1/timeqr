@@ -1,11 +1,12 @@
-// api/visitor.js
 import db from '../server/firebase-admin';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const ref = db.ref('visitorCount');
-      const today = new Date().toISOString().split('T')[0];  // 오늘 날짜 (YYYY-MM-DD)
+      const today = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000))  // UTC 시간대로 오늘 날짜
+        .toISOString()
+        .split('T')[0];  // 오늘 날짜 (YYYY-MM-DD)
 
       // 현재 날짜에 해당하는 방문자 수가 있는지 확인
       const snapshot = await ref.once('value');
@@ -18,19 +19,17 @@ export default async function handler(req, res) {
 
       // 트랜잭션으로 방문자 수를 안전하게 증가시킴
       await ref.transaction(currentCount => {
-        // currentCount가 null 또는 undefined일 경우 기본값 설정
         if (currentCount === null || currentCount === undefined) {
           return {
             total: 1,
             today: 1,
-            lastResetDate: today,
+            lastResetDate: today
           };
         }
-        
-        // 방문자 수 증가
+
         return {
-          total: currentCount.total + 1,
-          today: currentCount.today + 1,
+          total: (currentCount.total || 0) + 1,
+          today: (currentCount.today || 0) + 1,
           lastResetDate: today
         };
       });
@@ -39,11 +38,10 @@ export default async function handler(req, res) {
       const updatedSnapshot = await ref.once('value');
       const updatedVisitorCount = updatedSnapshot.val();
 
-      res.status(200).json({ 
+      res.status(200).json({
         total: updatedVisitorCount.total,
         today: updatedVisitorCount.today
       });
-
     } catch (error) {
       res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
