@@ -635,15 +635,17 @@ const handleClockMouseUp = () => {
           <QRCode value={qrCodeUrl} size={256} />
         </div>
       )}
- <div style={{ marginTop: '20px' }}>
-  <div style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#f4f4f4' }}>
-    <h3>총 방문자 수: {visitorCount.total}</h3>
-  </div>
-  <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#f4f4f4' }}>
-    <h3>오늘 방문자 수: {visitorCount.today}</h3>
-  </div>
-</div>
+       {/* 방문자 카운터 UI */}
+       <div>
+      <h1>방문자 카운터</h1>
+      {/* 방문자 카운터 UI */}
+      {visitorCount !== null && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>총 방문자 수: {visitorCount.total}</h3>
+          <h3>오늘 방문자 수: {visitorCount.today}</h3>
+        </div>
       )}
+    </div>
     </div>
       )}
        {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
