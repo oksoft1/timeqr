@@ -11,10 +11,10 @@ const App = () => {
   const [dateColor, setDateColor] = useState(localStorage.getItem('dateColor') || '#33A1FF');  // 날짜 색상 상태
   const [timeFormat, setTimeFormat] = useState(localStorage.getItem('timeFormat') || 'HH:mm:ss');  // 시간 포맷 상태
   const [dateFormat, setDateFormat] = useState(localStorage.getItem('dateFormat') || 'yyyy-MM-dd eeee');  // 날짜 포맷 상태
-  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 580);  // 시간 x 좌표
-  const [y, setY] = useState(Number(localStorage.getItem('timeY')) || -80);  // 시간 y 좌표
-  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 640);  // 날짜 x 좌표
-  const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || 70);  // 날짜 y 좌표
+  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 0);  // 시간 x 좌표
+  const [y, setY] = useState(Number(localStorage.getItem('timeY')) || -1000);  // 시간 y 좌표
+  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 0);  // 날짜 x 좌표
+  const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || -750);  // 날짜 y 좌표
   const [isDragging, setIsDragging] = useState(false);  // 드래그 상태
   const [startX, setStartX] = useState(0);  // 드래그 시작 x 좌표
   const [startY, setStartY] = useState(0);  // 드래그 시작 y 좌표
@@ -324,10 +324,10 @@ const handleFullScreenToggle = () => {
     setDateFormat('yyyy-MM-dd eeee');
     setTimeSize(90);
     setDateSize(30);
-    setX(580);
-    setY(-80);
-    setDateX(640);
-    setDateY(70);
+    setX(0);
+    setY(-1000);
+    setDateX(0);
+    setDateY(-750);
     setShadowSize(2);
     setShadowColor('#000000');
     setBackgroundColor('#FFFFFF'); // 기본 배경색은 흰색
@@ -655,7 +655,7 @@ const handleClockMouseUp = () => {
         style={{
           color: dateColor,
           fontSize: `${dateSize}px`,
-          position: 'absolute',
+          position: 'relative',
           top: `${dateY}px`,
           left: `${dateX}px`,
           whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
@@ -681,7 +681,7 @@ const handleClockMouseUp = () => {
         style={{
           color: timeColor,
           fontSize: `${timeSize}px`,
-          position: 'absolute',
+          position: 'relative',
           top: `${y}px`,
           left: `${x}px`,
           whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
