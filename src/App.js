@@ -11,10 +11,10 @@ const App = () => {
   const [dateColor, setDateColor] = useState(localStorage.getItem('dateColor') || '#33A1FF');  // 날짜 색상 상태
   const [timeFormat, setTimeFormat] = useState(localStorage.getItem('timeFormat') || 'HH:mm:ss');  // 시간 포맷 상태
   const [dateFormat, setDateFormat] = useState(localStorage.getItem('dateFormat') || 'yyyy-MM-dd eeee');  // 날짜 포맷 상태
-  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 0);  // 시간 x 좌표
-  const [y, setY] = useState(Number(localStorage.getItem('timeY')) || -1000);  // 시간 y 좌표
-  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 0);  // 날짜 x 좌표
-  const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || -750);  // 날짜 y 좌표
+  const [x, setX] = useState(Number(localStorage.getItem('timeX')) || 10);  // 시간 x 좌표
+  const [y, setY] = useState(Number(localStorage.getItem('timeY')) || -90);  // 시간 y 좌표
+  const [dateX, setDateX] = useState(Number(localStorage.getItem('dateX')) || 20);  // 날짜 x 좌표
+  const [dateY, setDateY] = useState(Number(localStorage.getItem('dateY')) || 70);  // 날짜 y 좌표
   const [isDragging, setIsDragging] = useState(false);  // 드래그 상태
   const [startX, setStartX] = useState(0);  // 드래그 시작 x 좌표
   const [startY, setStartY] = useState(0);  // 드래그 시작 y 좌표
@@ -324,10 +324,10 @@ const handleFullScreenToggle = () => {
     setDateFormat('yyyy-MM-dd eeee');
     setTimeSize(90);
     setDateSize(30);
-    setX(0);
-    setY(-1000);
-    setDateX(0);
-    setDateY(-750);
+    setX(10);
+    setY(-90);
+    setDateX(20);
+    setDateY(70);
     setShadowSize(2);
     setShadowColor('#000000');
     setBackgroundColor('#FFFFFF'); // 기본 배경색은 흰색
@@ -371,21 +371,9 @@ const handleClockMouseUp = () => {
     }}
     onClick={handleBackgroundClick} // 배경 클릭 시 전체화면 해제
   >
-    
-    {/* 시계 부분: 윗쪽 고정 */}
-    <div
-        style={{
-          position: 'fixed',
-          top: '0',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: '1000',
-        }}
-      >
-    </div>
     {/* 옵션들: 스크롤 가능 */}
     { (
-    <div style={{ marginTop: '150px', overflowY: 'auto', maxHeight: 'calc(100vh - 270px)',border: '2px solid #ccc',  opacity: isFullScreen ? 0 : 1,pointerEvents: isFullScreen ? 'none' : 'auto',}}>
+    <div style={{ marginTop: '150px', marginRight: '40px', overflowY: 'auto', maxHeight: 'calc(100vh - 270px)',border: '2px solid #ccc',  opacity: isFullScreen ? 0 : 1,pointerEvents: isFullScreen ? 'none' : 'auto',}}>
        {/* Full Screen button */}
      { (
         <div style={{ marginTop: '20px' }}>
@@ -655,7 +643,7 @@ const handleClockMouseUp = () => {
         style={{
           color: dateColor,
           fontSize: `${dateSize}px`,
-          position: 'relative',
+          position: 'fixed',
           top: `${dateY}px`,
           left: `${dateX}px`,
           whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
@@ -681,7 +669,7 @@ const handleClockMouseUp = () => {
         style={{
           color: timeColor,
           fontSize: `${timeSize}px`,
-          position: 'relative',
+          position: 'fixed',
           top: `${y}px`,
           left: `${x}px`,
           whiteSpace: 'nowrap',  // 텍스트가 한 줄로 표시되도록 설정
