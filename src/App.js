@@ -373,7 +373,7 @@ const handleClockMouseUp = () => {
   >
     {/* 옵션들: 스크롤 가능 */}
     { (
-    <div style={{ marginTop: '150px', marginRight: '40px', overflowY: 'auto', maxHeight: 'calc(100vh - 270px)',border: '2px solid #ccc',  opacity: isFullScreen ? 0 : 1,pointerEvents: isFullScreen ? 'none' : 'auto',}}>
+    <div style={{ marginTop: '150px', marginRight: '40px', overflowY: 'auto', maxHeight: 'calc(100vh - 180px)',border: '2px solid #ccc',  opacity: isFullScreen ? 0 : 1,pointerEvents: isFullScreen ? 'none' : 'auto',}}>
        {/* Full Screen button */}
      { (
         <div style={{ marginTop: '20px' }}>
