@@ -31,6 +31,31 @@ const App = () => {
  // 전체 방문자 수와 오늘 방문자 수를 각각 상태로 관리
  const [visitorCount, setVisitorCount] = useState(0);
  const [todayVisitorCount, setTodayVisitorCount] = useState(0);
+const [targetDateTime, setTargetDateTime] = useState('');
+const [countdown, setCountdown] = useState('');
+const [isCountdownVisible, setIsCountdownVisible] = useState(true);
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (targetDateTime) {
+      const now = new Date().getTime();
+      const target = new Date(targetDateTime).getTime();
+      const distance = target - now;
+
+      if (distance <= 0) {
+        setCountdown('Time is up!');
+        clearInterval(interval);
+      } else {
+        const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((distance / (1000 * 60)) % 60);
+        const seconds = Math.floor((distance / 1000) % 60);
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      }
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [targetDateTime]);
 
  useEffect(() => {
    // 서버less 함수로 API 호출
@@ -607,6 +632,28 @@ const handleClockMouseUp = () => {
           style={{ padding: '10px', width: '300px', fontSize: '16px', color: textColor, backgroundColor: backgroundColor }}
         />
       </div>
+{/* 카운트다운 토글 */}
+<div style={{ marginTop: '20px' }}>
+  <button
+    onClick={() => setIsCountdownVisible(prev => !prev)}
+    style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', color: textColor, backgroundColor: backgroundColor }}
+  >
+    {isCountdownVisible ? 'Hide Countdown' : 'Show Countdown'}
+  </button>
+</div>
+
+{/* 목표 날짜 시간 입력 */}
+{isCountdownVisible && (
+  <div style={{ marginTop: '20px' }}>
+    <label style={{ fontSize: '16px', color: textColor }}>Target Date & Time: </label>
+    <input
+      type="datetime-local"
+      value={targetDateTime}
+      onChange={(e) => setTargetDateTime(e.target.value)}
+      style={{ padding: '10px', fontSize: '16px', marginLeft: '10px', backgroundColor: backgroundColor, color: textColor }}
+    />
+  </div>
+)}
 
       {/* QR 코드 생성 버튼 */}
       <div style={{ marginTop: '20px' }}>
@@ -688,6 +735,21 @@ const handleClockMouseUp = () => {
         {formattedTime}
       </h2>
       )}
+      {isCountdownVisible && targetDateTime && (
+  <div
+    style={{
+      position: 'fixed',
+      top: '10px',
+      width: '100%',
+      textAlign: 'center',
+      color: textColor,
+      fontSize: '24px',
+      textShadow: `${shadowSize}px ${shadowSize}px ${shadowColor}`,
+    }}
+  >
+    ⏳ Countdown: {countdown}
+  </div>
+)}
     </div>
   );
 };
