@@ -678,10 +678,9 @@ const handleClockMouseUp = () => {
       <p>Total number of visitors: {visitorCount}</p>
     </div>
      {/* 푸터 추가 */}
-     <footer style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center', marginTop: '0px' }}>
-        <p>Copyright © 2025 OkSoft. All Rights Reserved.</p>
-        <p>Launching Date: 2025.4.25</p>
-      </footer>
+     <footer style={{ fontSize: '12px', opacity: 0.5, marginTop: '20px' }}>
+  © {new Date().getFullYear()} AnonDev. All rights reserved.
+</footer>
     </div>
       )}
        {/* 날짜 표시 (색상, 크기, 위치, 포맷 적용) */}
