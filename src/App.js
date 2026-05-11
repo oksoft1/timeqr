@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import { format } from 'date-fns';
-import * as locales from 'date-fns/locale';
 
 const App = () => {
-  // --- 1. 상태 관리 (기존 모든 기능 포함) ---
-  const [canEdit, setCanEdit] = useState(false); // 수정 모드 여부
+  // --- 1. 상태 관리 ---
+  const [canEdit, setCanEdit] = useState(false);
   const [time, setTime] = useState(new Date());
   const [url, setUrl] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -27,23 +26,21 @@ const App = () => {
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
   
-  // 방문자 및 카운트다운 상태
   const [visitorCount, setVisitorCount] = useState(0);
   const [todayVisitorCount, setTodayVisitorCount] = useState(0);
   const [targetDateTime, setTargetDateTime] = useState('');
   const [countdown, setCountdown] = useState('');
   const [isCountdownVisible, setIsCountdownVisible] = useState(true);
 
-  // --- 2. 텔레그램 연동 및 초기 설정 ---
+  // --- 2. 텔레그램 및 타이머 설정 ---
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.expand(); // 화면 가득 키우기
+      window.Telegram.WebApp.expand();
     }
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // 방문자 수 API 호출 (기존 로직 유지)
   useEffect(() => {
     fetch('/api/visitor')
       .then(res => res.json())
@@ -53,7 +50,6 @@ const App = () => {
       }).catch(() => {});
   }, []);
 
-  // 카운트다운 로직
   useEffect(() => {
     const interval = setInterval(() => {
       if (targetDateTime) {
@@ -61,31 +57,29 @@ const App = () => {
         if (distance <= 0) {
           setCountdown('Time is up!');
         } else {
-          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
-          const minutes = Math.floor((distance / (1000 * 60)) % 60);
-          const seconds = Math.floor((distance / 1000) % 60);
-          setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+          const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+          const h = Math.floor((distance / (1000 * 60 * 60)) % 24);
+          const m = Math.floor((distance / (1000 * 60)) % 60);
+          const s = Math.floor((distance / 1000) % 60);
+          setCountdown(`${d}d ${h}h ${m}m ${s}s`);
         }
       }
     }, 1000);
     return () => clearInterval(interval);
   }, [targetDateTime]);
 
-  // 배경색에 따른 글자색 자동 반전
   useEffect(() => {
+    const hexToRgb = (hex) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return { r, g, b };
+    };
     const rgb = hexToRgb(backgroundColor);
     setTextColor((rgb.r + rgb.g + rgb.b) <= 384 ? '#FFFFFF' : '#000000');
   }, [backgroundColor]);
 
-  const hexToRgb = (hex) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return { r, g, b };
-  };
-
-  // --- 3. 드래그 핸들러 (canEdit 조건 추가) ---
+  // --- 3. 이벤트 핸들러 ---
   const handleStart = (e, type) => {
     if (!canEdit) return;
     const clientX = e.clientX || e.touches[0].clientX;
@@ -100,11 +94,15 @@ const App = () => {
     const clientX = e.clientX || e.touches[0].clientX;
     const clientY = e.clientY || e.touches[0].clientY;
     if (type === 'time') {
-      setX(clientX - startX); setY(clientY - startY);
-      localStorage.setItem('timeX', clientX - startX); localStorage.setItem('timeY', clientY - startY);
+      const newX = clientX - startX;
+      const newY = clientY - startY;
+      setX(newX); setY(newY);
+      localStorage.setItem('timeX', newX); localStorage.setItem('timeY', newY);
     } else {
-      setDateX(clientX - startX); setDateY(clientY - startY);
-      localStorage.setItem('dateX', clientX - startX); localStorage.setItem('dateY', clientY - startY);
+      const newX = clientX - startX;
+      const newY = clientY - startY;
+      setDateX(newX); setDateY(newY);
+      localStorage.setItem('dateX', newX); localStorage.setItem('dateY', newX);
     }
   };
 
@@ -119,27 +117,24 @@ const App = () => {
       backgroundColor: backgroundColor, overflow: 'hidden', touchAction: 'none'
     }}>
       
-      {/* 🔓 수정 모드 스위치 */}
       <button onClick={() => setCanEdit(!canEdit)} style={{
-        position: 'absolute', top: '50px', right: '20px', zIndex: 1000,
+        position: 'absolute', top: '60px', right: '20px', zIndex: 1000,
         padding: '10px 20px', borderRadius: '30px', border: 'none',
-        backgroundColor: canEdit ? '#FF4757' : '#2ED573', color: 'white', fontWeight: 'bold',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+        backgroundColor: canEdit ? '#FF4757' : '#2ED573', color: 'white', fontWeight: 'bold'
       }}>
-        {canEdit ? '✅ 수정 완료' : '⚙️ 앱 설정'}
+        {canEdit ? '✅ 완료' : '⚙️ 설정'}
       </button>
 
-      {/* ⏳ 카운트다운 표시 */}
       {isCountdownVisible && targetDateTime && (
         <div style={{
-          position: 'fixed', top: '15px', width: '100%', textAlign: 'center',
-          color: textColor, fontSize: '18px', fontWeight: 'bold', zIndex: 10
+          position: 'fixed', top: '20px', width: '100%', textAlign: 'center',
+          color: textColor, fontSize: '18px', fontWeight: 'bold'
         }}>
           ⏳ {countdown}
         </div>
       )}
 
-      {/* ⏰ 시계 & 날짜 영역 */}
+      {/* 날짜 */}
       <div onTouchStart={(e)=>handleStart(e,'date')} onTouchMove={(e)=>handleMove(e,'date')} onTouchEnd={()=>setIsDragging(false)}
         onMouseDown={(e)=>handleStart(e,'date')} onMouseMove={(e)=>handleMove(e,'date')} onMouseUp={()=>setIsDragging(false)}
         style={{
@@ -150,6 +145,7 @@ const App = () => {
         {format(time, dateFormat)}
       </div>
 
+      {/* 시간 */}
       <div onTouchStart={(e)=>handleStart(e,'time')} onTouchMove={(e)=>handleMove(e,'time')} onTouchEnd={()=>setIsDragging(false)}
         onMouseDown={(e)=>handleStart(e,'time')} onMouseMove={(e)=>handleMove(e,'time')} onMouseUp={()=>setIsDragging(false)}
         style={{
@@ -160,44 +156,41 @@ const App = () => {
         {format(time, timeFormat)}
       </div>
 
-      {/* ⚙️ 설정창 (수정 모드에서만 등장) */}
       {canEdit && (
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: '60vh',
           backgroundColor: 'white', borderTopLeftRadius: '20px', borderTopRightRadius: '20px',
-          padding: '20px', overflowY: 'auto', zIndex: 900, boxShadow: '0 -5px 20px rgba(0,0,0,0.1)', color: '#333'
+          padding: '20px', overflowY: 'auto', zIndex: 900, color: '#333'
         }}>
-          <h3>🛠️ 설정 메뉴</h3>
-          <p style={{fontSize: '12px'}}>시계와 날짜를 직접 드래그하여 배치하세요.</p>
-          
+          <h3>🛠️ 설정</h3>
+          <label>배경: <input type="color" value={backgroundColor} onChange={(e)=>setBackgroundColor(e.target.value)}/></label><br/>
+          <label>시간 색상: <input type="color" value={timeColor} onChange={(e)=>setTimeColor(e.target.value)}/></label><br/>
+          <label>날짜 색상: <input type="color" value={dateColor} onChange={(e)=>setDateColor(e.target.value)}/></label><br/>
+          <label>그림자 색상: <input type="color" value={shadowColor} onChange={(e)=>setShadowColor(e.target.value)}/></label><br/>
           <hr/>
-          <h4>🎨 색상 및 배경</h4>
-          <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
-             <label>배경: <input type="color" value={backgroundColor} onChange={(e)=>setBackgroundColor(e.target.value)}/></label>
-             <label>시간: <input type="color" value={timeColor} onChange={(e)=>setTimeColor(e.target.value)}/></label>
-             <label>날짜: <input type="color" value={dateColor} onChange={(e)=>setDateColor(e.target.value)}/></label>
-          </div>
-
-          <h4>📏 크기 조절</h4>
           <label>시간 크기: <input type="range" min="10" max="300" value={timeSize} onChange={(e)=>setTimeSize(Number(e.target.value))}/></label><br/>
-          <label>날짜 크기: <input type="range" min="10" max="150" value={dateSize} onChange={(e)=>setDateSize(Number(e.target.value))}/></label>
-
-          <h4>🔗 QR 코드 생성</h4>
-          <input type="text" value={url} onChange={(e)=>setUrl(e.target.value)} placeholder="URL 입력" style={{width: '70%', padding: '5px'}}/>
-          <button onClick={() => setQrCodeUrl(url)} style={{marginLeft: '5px'}}>생성</button>
-          {qrCodeUrl && <div style={{marginTop: '10px'}}><QRCode value={qrCodeUrl} size={128} /></div>}
-
+          <label>날짜 크기: <input type="range" min="10" max="150" value={dateSize} onChange={(e)=>setDateSize(Number(e.target.value))}/></label><br/>
+          <label>그림자 크기: <input type="range" min="0" max="20" value={shadowSize} onChange={(e)=>setShadowSize(Number(e.target.value))}/></label><br/>
+          <hr/>
+          <label>시간 포맷: <input type="text" value={timeFormat} onChange={(e)=>setTimeFormat(e.target.value)}/></label><br/>
+          <label>날짜 포맷: <input type="text" value={dateFormat} onChange={(e)=>setDateFormat(e.target.value)}/></label><br/>
+          <hr/>
+          <h4>🔗 QR 생성</h4>
+          <input type="text" value={url} onChange={(e)=>setUrl(e.target.value)} placeholder="URL 입력"/>
+          <button onClick={() => setQrCodeUrl(url)}>생성</button>
+          {qrCodeUrl && <div style={{marginTop: '10px'}}><QRCode value={qrCodeUrl} size={100} /></div>}
+          <hr/>
           <h4>📅 카운트다운</h4>
-          <input type="datetime-local" value={targetDateTime} onChange={(e)=>setTargetDateTime(e.target.value)} style={{padding: '5px'}}/>
+          <input type="datetime-local" value={targetDateTime} onChange={(e)=>setTargetDateTime(e.target.value)}/>
+          <button onClick={() => setIsCountdownVisible(!isCountdownVisible)}>토글</button>
           
-          <div style={{marginTop: '30px', paddingBottom: '50px'}}>
-             <button onClick={handleReset} style={{backgroundColor: '#eee', border: '1px solid #ccc', padding: '10px'}}>전체 초기화</button>
-             <p style={{fontSize: '10px', marginTop: '10px'}}>오늘 방문자: {todayVisitorCount} | 전체 방문자: {visitorCount}</p>
+          <div style={{marginTop: '30px', paddingBottom: '40px'}}>
+             <button onClick={handleReset} style={{backgroundColor: '#FF4757', color: 'white', border: 'none', padding: '10px'}}>초기화</button>
+             <p>오늘: {todayVisitorCount} | 전체: {visitorCount}</p>
           </div>
         </div>
       )}
 
-      {/* 📜 저작권 표시 */}
       {!canEdit && (
         <footer style={{ position: 'absolute', bottom: '20px', width: '100%', textAlign: 'center', fontSize: '12px', opacity: 0.4, color: textColor }}>
           © {new Date().getFullYear()} AnonDev. All rights reserved.
