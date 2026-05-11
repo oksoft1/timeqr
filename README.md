@@ -97,6 +97,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Android & iOS App
 You can download the Clock Web App directly on your mobile device!
 
+## Telegram
+t.me/my_clock_01_bot
+
 Download on Google Play (Android)
 https://play.google.com/store/apps/details?id=com.f91w
 
